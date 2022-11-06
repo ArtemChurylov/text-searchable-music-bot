@@ -2,4 +2,9 @@ telegram:
   bot-username: '@lyrics_searchable_bot'
   bot-path:
 
-# https://api.telegram.org/bot5687606807:AAEGOSGDzIV4xYJa1oX_54k_BpT74SjB15A/setWebhook?url=https://fba4-2a02-a317-e347-7000-e071-9b3b-ef5-d404.eu.ngrok.io/wsh-music-bot
+spring:
+  kafka:
+    producer:
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer

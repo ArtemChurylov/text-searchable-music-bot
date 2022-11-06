@@ -1,4 +1,4 @@
-package com.music.bot.state;
+package com.music.bot.userstate;
 
 import java.util.HashMap;
 import java.util.Map;

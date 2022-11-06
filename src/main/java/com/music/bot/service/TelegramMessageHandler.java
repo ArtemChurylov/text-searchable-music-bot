@@ -2,7 +2,7 @@ package com.music.bot.service;
 
 import com.music.bot.exeptions.DownloadFileException;
 import com.music.bot.responses.FileInfoResponse;
-import com.music.bot.state.UserState;
+import com.music.bot.userstate.UserState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
@@ -22,8 +22,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static com.music.bot.layout.KeyboardMarkup.KEYBOARD_MENU;
-import static com.music.bot.state.UserStateStore.getUserState;
-import static com.music.bot.state.UserStateStore.registerUser;
+import static com.music.bot.userstate.UserStateStore.getUserState;
+import static com.music.bot.userstate.UserStateStore.registerUser;
 
 
 @Service
@@ -32,6 +32,7 @@ public class TelegramMessageHandler {
 
     private final MenuHandler menuHandler;
     private final RestTemplate restTemplate;
+    private final MusicKafkaService musicKafkaService;
     private static final String GET_FILE_PATH_URL = "https://api.telegram.org/bot%s/getFile?file_id=%s";
     private static final String GET_FILE_URL = "https://api.telegram.org/file/bot%s/%s";
     @Value("${telegram.bot-token}")
@@ -93,6 +94,7 @@ public class TelegramMessageHandler {
 
         try {
             Path path = downloadFile(audio);
+            musicKafkaService.sendMetaData(path, audio);
             sendMessage.setText("File was successfully uploaded\nIt can take some time to appear in your list");
         } catch (DownloadFileException e) {
             sendMessage.setText("Something went wrong, cannot download your file");
@@ -105,7 +107,7 @@ public class TelegramMessageHandler {
         ResponseExtractor<ResponseEntity<byte[]>> responseEntityExtractor = restTemplate.responseEntityExtractor(byte[].class);
         ResponseEntity<byte[]> response = restTemplate.execute(String.format(GET_FILE_URL, BOT_TOKEN, infoResponse.getResult().getFilePath()), HttpMethod.GET, null, responseEntityExtractor);
         if (response == null || response.getBody() == null) {
-            throw new DownloadFileException("Cannot download file " + audio.getFileId());
+            throw new DownloadFileException("Cannot download file " + audio.getFileId() + ", no response from Telegram Server");
         }
         Path filePath = Paths.get(MUSIC_PATH, audio.getFileName());
         try (FileOutputStream fileOutputStream = new FileOutputStream(filePath.toString())) {

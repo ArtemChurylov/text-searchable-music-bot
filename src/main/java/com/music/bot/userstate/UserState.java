@@ -1,4 +1,4 @@
-package com.music.bot.state;
+package com.music.bot.userstate;
 
 public enum UserState {
 

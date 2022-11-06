@@ -1,7 +1,7 @@
 package com.music.bot.service;
 
-import com.music.bot.state.UserState;
-import com.music.bot.state.UserStateStore;
+import com.music.bot.userstate.UserState;
+import com.music.bot.userstate.UserStateStore;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;

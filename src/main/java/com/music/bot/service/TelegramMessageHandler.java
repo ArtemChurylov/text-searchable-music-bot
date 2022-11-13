@@ -22,8 +22,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static com.music.bot.layout.KeyboardMarkup.KEYBOARD_MENU;
-import static com.music.bot.userstate.UserStateStore.getUserState;
-import static com.music.bot.userstate.UserStateStore.registerUser;
+import static com.music.bot.userstate.UserState.SHOW_MENU;
+import static com.music.bot.userstate.UserStateStore.*;
 
 
 @Service
@@ -96,6 +96,7 @@ public class TelegramMessageHandler {
             Path path = downloadFile(audio);
             musicKafkaService.sendMetaData(path, audio);
             sendMessage.setText("File was successfully uploaded\nIt can take some time to appear in your list");
+            updateUserState(chatId, SHOW_MENU);
         } catch (DownloadFileException e) {
             sendMessage.setText("Something went wrong, cannot download your file");
         }

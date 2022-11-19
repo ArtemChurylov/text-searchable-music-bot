@@ -4,11 +4,13 @@ import com.music.bot.exeptions.DownloadFileException;
 import com.music.bot.responses.FileInfoResponse;
 import com.music.bot.userstate.UserState;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResponseExtractor;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -25,7 +27,7 @@ import static com.music.bot.layout.KeyboardMarkup.KEYBOARD_MENU;
 import static com.music.bot.userstate.UserState.SHOW_MENU;
 import static com.music.bot.userstate.UserStateStore.*;
 
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TelegramMessageHandler {
@@ -34,7 +36,10 @@ public class TelegramMessageHandler {
     private final RestTemplate restTemplate;
     private final MusicKafkaService musicKafkaService;
     private static final String GET_FILE_PATH_URL = "https://api.telegram.org/bot%s/getFile?file_id=%s";
-    private static final String GET_FILE_URL = "https://api.telegram.org/file/bot%s/%s";
+    private static final String DOWNLOAD_FILE_URL = "https://api.telegram.org/file/bot%s/%s";
+    private static final String SEND_AUDIO_URL = "https://api.telegram.org/bot%s/sendAudio?chat_id=%s&audio=%s";
+    private static final String SEARCH_AUDIO_URL = "http://localhost:8085/music-bot-service/audio?lyrics=%s";
+
     @Value("${telegram.bot-token}")
     private String BOT_TOKEN;
     @Value("${music.full-path}")
@@ -43,6 +48,7 @@ public class TelegramMessageHandler {
     public BotApiMethod<?> handleUpdate(Update update) {
         Message message = update.getMessage();
         if (message != null) {
+            log.debug("Received update from {}", update.getMessage().getChat().getFirstName());
             if ("/start".equals(message.getText())) {
                 return handleStartCommand(message);
             }
@@ -72,8 +78,8 @@ public class TelegramMessageHandler {
             case UPLOAD_SONG -> {
                 return handleUploadSongState(message);
             }
-            case SEARCH_FOR_SONG -> {
-                return null;
+            case SEARCH_BY_LYRICS -> {
+                return handleSearchByLyrics(message);
             }
             default -> {
                 return new SendMessage(message.getChatId().toString(), "No such option");
@@ -103,10 +109,27 @@ public class TelegramMessageHandler {
         return sendMessage;
     }
 
+    private SendMessage handleSearchByLyrics(Message message) {
+        Long chatId = message.getChatId();
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(chatId);
+
+        try {
+            String audioID = restTemplate.getForObject(String.format(SEARCH_AUDIO_URL, message.getText()), String.class);
+            restTemplate.execute(String.format(SEND_AUDIO_URL, BOT_TOKEN, chatId, audioID), HttpMethod.POST, null, null);
+            updateUserState(chatId, SHOW_MENU);
+            sendMessage.setText("Here is your song!");
+            return sendMessage;
+        } catch (RestClientException e) {
+            sendMessage.setText("Cannot find such audio");
+            return sendMessage;
+        }
+    }
+
     private Path downloadFile(Audio audio) throws DownloadFileException {
         FileInfoResponse infoResponse = restTemplate.getForObject(String.format(GET_FILE_PATH_URL, BOT_TOKEN, audio.getFileId()), FileInfoResponse.class);
         ResponseExtractor<ResponseEntity<byte[]>> responseEntityExtractor = restTemplate.responseEntityExtractor(byte[].class);
-        ResponseEntity<byte[]> response = restTemplate.execute(String.format(GET_FILE_URL, BOT_TOKEN, infoResponse.getResult().getFilePath()), HttpMethod.GET, null, responseEntityExtractor);
+        ResponseEntity<byte[]> response = restTemplate.execute(String.format(DOWNLOAD_FILE_URL, BOT_TOKEN, infoResponse.getResult().getFilePath()), HttpMethod.GET, null, responseEntityExtractor);
         if (response == null || response.getBody() == null) {
             throw new DownloadFileException("Cannot download file " + audio.getFileId() + ", no response from Telegram Server");
         }

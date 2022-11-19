@@ -23,7 +23,7 @@ public class KeyboardMarkup {
         KeyboardRow row2 = new KeyboardRow();
         KeyboardRow row3 = new KeyboardRow();
         row1.add(new KeyboardButton("Upload song"));
-        row2.add(new KeyboardButton("Search for song"));
+        row2.add(new KeyboardButton("Search by lyrics"));
         row3.add(new KeyboardButton("Get list of songs"));
         keyboard.add(row1);
         keyboard.add(row2);

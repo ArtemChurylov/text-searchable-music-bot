@@ -23,8 +23,12 @@ public class MenuHandler {
                 sendMessage.setText("Send your song, buddy!\n\nSupported languages:\nEnglish\nSpanish\nFrench\nGerman\nItalian\nPortuguese\nDutch");
                 return sendMessage;
             }
-            case "Search for song" -> {
-                return null;
+            case "Search by lyrics" -> {
+                UserStateStore.updateUserState(chatId, UserState.SEARCH_BY_LYRICS);
+                SendMessage sendMessage = new SendMessage();
+                sendMessage.setChatId(chatId);
+                sendMessage.setText("Provide lyrics piece");
+                return sendMessage;
             }
             case "Get list of songs" -> {
                 return sendListOfSongs(chatId);

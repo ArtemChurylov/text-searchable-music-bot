@@ -1,6 +1,6 @@
 package com.music.bot.controller;
 
-import com.music.bot.service.WshMusicBot;
+import com.music.bot.service.AudioMusicBot;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,10 +17,10 @@ import static com.music.bot.controller.RestMapping.BOT_API;
 @RequiredArgsConstructor
 public class BotController {
 
-    private final WshMusicBot wshMusicBot;
+    private final AudioMusicBot audioMusicBot;
 
     @PostMapping
     public BotApiMethod<?> onUpdateReceived(@RequestBody Update update) {
-        return wshMusicBot.onWebhookUpdateReceived(update);
+        return audioMusicBot.onWebhookUpdateReceived(update);
     }
 }

@@ -11,7 +11,7 @@ import org.telegram.telegrambots.starter.SpringWebhookBot;
 @Slf4j
 @Getter
 @Setter
-public class WshMusicBot extends SpringWebhookBot {
+public class AudioMusicBot extends SpringWebhookBot {
 
     private String botUsername;
     private String botToken;
@@ -19,7 +19,7 @@ public class WshMusicBot extends SpringWebhookBot {
 
     private final TelegramMessageHandler messageHandler;
 
-    public WshMusicBot(SetWebhook setWebhook, TelegramMessageHandler messageHandler) {
+    public AudioMusicBot(SetWebhook setWebhook, TelegramMessageHandler messageHandler) {
         super(setWebhook);
         this.messageHandler = messageHandler;
     }
